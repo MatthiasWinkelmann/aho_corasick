@@ -1,4 +1,3 @@
-require "json"
 
 class AhoCorasick
   struct MatchList
@@ -7,33 +6,7 @@ class AhoCorasick
     def initialize(@elem : Int32, @next_ : Int32)
     end
 
-    JSON.mapping(
-      elem: Int32,
-      next_: Int32
-    )
-  end
 
-  struct AhoJSON
-    JSON.mapping(
-      chs: String,
-      pa: Array(Int32),
-      sx: Array(Int32),
-      ml: Array(Int32),
-      cl: Array(Int32),
-      sb: Array(Int32),
-      ms: Array(MatchList),
-      rt: Int32
-    )
-
-    def initialize(@chs : String,
-                   @pa : Array(Int32),
-                   @sx : Array(Int32),
-                   @ml : Array(Int32),
-                   @cl : Array(Int32),
-                   @sb : Array(Int32),
-                   @ms : Array(MatchList),
-                   @rt : Int32)
-    end
   end
 
   alias Rel = {elem: Int32, char: Char}
@@ -49,20 +22,6 @@ class AhoCorasick
     return node_idx
   end
 
-  def to_json(io)
-    str = String.build do |s|
-      @char.each do |x|
-        s << x
-      end
-    end
-    js = AhoJSON.new chs: str, pa: @parent, sx: @suffix, ml: @match_list, cl: @child_list, sb: @sibling, ms: @matches, rt: @root_idx
-    js.to_json io
-  end
-
-  def self.from_json(str)
-    js = AhoJSON.from_json(str)
-    return AhoCorasick.new js
-  end
 
   @root_idx : Int32
   @char : Array(Char)
@@ -72,22 +31,6 @@ class AhoCorasick
   @child_list : Array(Int32)
   @sibling : Array(Int32)
 
-  def initialize(js : AhoJSON)
-    @char = js.chs.chars
-    @parent = js.pa
-    @suffix = js.sx
-    @match_list = js.ml
-    @child_list = js.cl
-    @sibling = js.sb
-    @matches = js.ms
-    @root_idx = js.rt
-    @child_map = Hash(Rel, Int32).new(initial_capacity: @child_list.size)
-    @parent.each_with_index do |parent_idx, node_idx|
-      if parent_idx >= 0
-        @child_map[{elem: parent_idx, char: @char[node_idx]}] = node_idx
-      end
-    end
-  end
 
   def initialize(dictionary : Array(String))
     arr_init_size = dictionary.size * 4
